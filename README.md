@@ -8,7 +8,7 @@ npmjs url: https://www.npmjs.com/package/react-native-stepform
 
 ## Demo
 
-Check out the demo [here](https://youtu.be/X5Uo1xKKras) and play around with some sample marquees.
+Check out the demo [here](https://youtu.be/X5Uo1xKKras)
 
 ## Installation
 
