@@ -2,6 +2,14 @@
   "name": "react-native-stepform",
   "version": "1.1.0",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sippinonjuicebox/react-native-stepform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sippinonjuicebox/react-native-stepform/issues"
+  },
+  "homepage": "https://github.com/sippinonjuicebox/react-native-stepform#readme",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
