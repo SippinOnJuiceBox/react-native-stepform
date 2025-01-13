@@ -2,6 +2,8 @@
 
 This is a lightweight customizable multi-step form library for React Native with built-in validation using Zod and a modular component registry system.
 
+Note: This library is incomplete (No tests) use at your own risk
+
 ## Demo
 
 Check out the demo [here](https://youtu.be/X5Uo1xKKras) and play around with some sample marquees.
