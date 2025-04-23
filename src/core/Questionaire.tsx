@@ -263,12 +263,12 @@ export default function Questionnaire({
 
 											<ProgressBar
 												progress={(currentStep + 1) / totalSteps}
-												height={8}
+												height={6}
 												backgroundColor="#f5f5f4"
 												progressColor="#78716c"
 												style={styles.progressBar}
 											/>
-											
+
 											{hasSkippableQuestions ? (
 												<TouchableOpacity
 													onPress={handleSkip}
@@ -325,7 +325,9 @@ export default function Questionnaire({
 							<>
 								<ContinueButton
 									onPress={handleNext}
-									disabled={!isStepValid() || isProcessingField || isSubmittingStep}
+									disabled={
+										!isStepValid() || isProcessingField || isSubmittingStep
+									}
 								/>
 							</>
 						)}
@@ -366,10 +368,13 @@ const styles = StyleSheet.create({
 	},
 	buttonPlaceholder: {
 		width: 40,
+		height: 32,
 	},
 	backButton: {
 		width: 40,
+		height: 32,
 		alignItems: "flex-start",
+		justifyContent: "center",
 	},
 	backButtonText: {
 		fontSize: 16,
@@ -377,7 +382,9 @@ const styles = StyleSheet.create({
 	},
 	skipButton: {
 		width: 40,
+		height: 32,
 		alignItems: "flex-end",
+		justifyContent: "center",
 	},
 	skipButtonText: {
 		fontSize: 14,
