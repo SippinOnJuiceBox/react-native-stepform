@@ -1,250 +1,340 @@
 # React Native StepForm
 
-This is a lightweight customizable multi-step form library for React Native with built-in validation using Zod and a modular component registry system.
+A lightweight, customizable multi-step form library for React Native with built-in validation, smooth animations, and a modular component registry system.
 
-Note: This library is incomplete (No tests) use at your own risk
+![npm](https://img.shields.io/npm/v/react-native-stepform)
+![license](https://img.shields.io/npm/l/react-native-stepform)
 
-npmjs url: https://www.npmjs.com/package/react-native-stepform
+## Features
 
-## Demo
-
-Check out the demo [here](https://youtu.be/X5Uo1xKKras)
+- **Unified Hook API** - Single hook for all form management needs
+- **Smooth Animations** - Built-in animation presets using React Native Reanimated
+- **Type Safety** - Full TypeScript support with proper type definitions
+- **Performance Optimized** - Efficient rendering and state management
+- **Modular Component System** - Easily extend with custom question types
+- **Built-in Validation** - Integrated Zod validation with error handling
+- **Async Operations** - Support for API calls during form progression
+- **Highly Customizable** - Style and render props for complete UI control
 
 ## Installation
 
-Install react-native-stepform with `npm`
-
 ```bash
-npm install react-native-stepform react-native-reanimated
+# Using npm
+npm install react-native-stepform zod react-native-reanimated
+
+# Using yarn
+yarn add react-native-stepform zod react-native-reanimated
 ```
 
-If you're using `yarn`, run:
+> **Note:** Make sure to follow the [React Native Reanimated installation instructions](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) to complete the setup.
 
-```bash
-yarn add react-native-stepform react-native-reanimated
-```
+## Basic Usage
 
-## Usage/Examples
-
-```typescript
+```tsx
 import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Questionnaire } from "react-native-stepform";
 import { z } from "zod";
 
-// Create a config
-const config = [
-  {
-    pageHeader: "Login",
-    pageSubheader: "Enter your email to get started",
-    questions: [
-      {
-        type: "input",
-        name: "email",
-        question: "What is your email?",
-        placeholder: "Enter your email",
-        validation: z.string().email("Please enter a valid email"),
-      },
-    ],
-  },
-  {
-    pageHeader: "Set Password",
-    pageSubheader: "Choose a secure password",
-    questions: [
-      {
-        type: "input",
-        name: "password",
-        question: "Create a password",
-        placeholder: "Enter your password",
-        secureTextEntry: true,
-        validation: z.string().min(8, "Password must be at least 8 characters"),
-      },
-    ],
-  },
-];
-
 export default function App() {
+  // Define your form steps and questions
+  const config = [
+    {
+      pageHeader: "Welcome",
+      pageSubheader: "Let's get started with your profile",
+      questions: [
+        {
+          type: "input",
+          name: "name",
+          question: "What's your name?",
+          placeholder: "Enter your full name",
+          validation: z.string().min(2, "Name must be at least 2 characters"),
+        },
+      ],
+    },
+    {
+      pageHeader: "Contact Information",
+      pageSubheader: "How can we reach you?",
+      questions: [
+        {
+          type: "input",
+          name: "email",
+          question: "What's your email address?",
+          placeholder: "Enter your email",
+          validation: z.string().email("Please enter a valid email"),
+          autoComplete: "email",
+        },
+      ],
+    },
+  ];
+
+  // Handle form submission
   const handleComplete = async (formData) => {
     console.log("Form submitted:", formData);
+    // Submit to your API or perform other actions
   };
 
   return (
     <SafeAreaProvider>
       <Questionnaire
-        //  Use the config
         config={config}
         onCompleted={handleComplete}
+        animationPreset="fadeSlideUp" // Choose your animation style
       />
     </SafeAreaProvider>
   );
 }
 ```
 
+## Advanced Usage with the Hook API
+
+For more control over the form, you can use the `useQuestionnaire` hook directly:
+
+```tsx
+import React from "react";
+import { View, Text } from "react-native";
+import { useQuestionnaire, ProgressBar, ContinueButton } from "react-native-stepform";
+import { z } from "zod";
+
+export default function CustomForm() {
+  const config = [
+    // Your form configuration
+  ];
+
+  const {
+    currentStep,
+    currentStepData,
+    formData,
+    handleNext,
+    handleBack,
+    handleInputChange,
+    isStepValid,
+    isSubmittingStep,
+    isProcessingField,
+    errors,
+    totalSteps,
+    fadeAnim,
+    animationPreset,
+  } = useQuestionnaire({
+    config,
+    initialStep: 0,
+    initialValues: { name: "John Doe" },
+    onCompleted: async (data) => {
+      console.log("Form completed:", data);
+    },
+    onStepChange: (step) => {
+      console.log(`Moved to step ${step}`);
+    },
+    debug: true, // Enable debug logging
+    animationPreset: "fadeSlideUp",
+  });
+
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      {/* Custom header */}
+      <Text style={{ fontSize: 24, fontWeight: "bold" }}>
+        {currentStepData.pageHeader}
+      </Text>
+      <Text style={{ fontSize: 16, marginBottom: 20 }}>
+        {currentStepData.pageSubheader}
+      </Text>
+      
+      {/* Progress indicator */}
+      <ProgressBar 
+        current={currentStep} 
+        total={totalSteps} 
+        height={8}
+        backgroundColor="#f5f5f4"
+        progressColor="#44403c"
+        animationDuration={300}
+      />
+      
+      {/* Render your custom form fields here */}
+      {currentStepData.questions.map((question) => (
+        <View key={question.name}>
+          {/* Your custom input component */}
+          <YourInputComponent
+            question={question}
+            value={formData[question.name]}
+            onChange={(value) => handleInputChange(question.name, value)}
+            error={errors[question.name]}
+          />
+        </View>
+      ))}
+      
+      {/* Navigation buttons */}
+      <View style={{ flexDirection: "row", marginTop: 20 }}>
+        {currentStep > 0 && (
+          <ContinueButton
+            onPress={handleBack}
+            style={{ marginRight: 8 }}
+          >
+            <Text>Back</Text>
+          </ContinueButton>
+        )}
+        
+        <ContinueButton
+          onPress={handleNext}
+          disabled={!isStepValid || isSubmittingStep}
+        >
+          <Text>
+            {isSubmittingStep ? "Processing..." : "Continue"}
+          </Text>
+        </ContinueButton>
+      </View>
+    </View>
+  );
+}
+```
+
+## Animation System
+
+The library includes a powerful animation system built on React Native Reanimated, with several built-in presets:
+
+```tsx
+<Questionnaire
+  config={config}
+  onCompleted={handleComplete}
+  animationPreset="fadeSlideUp" // Choose your animation style
+/>
+```
+
+Available animation presets:
+- `fade` - Simple fade in/out
+- `slideUp` - Slide up from bottom
+- `slideLeft` - Slide in from right (forward) or left (backward)
+- `slideRight` - Slide in from left (forward) or right (backward)
+- `scale` - Scale up from smaller size
+- `fadeSlideUp` - Fade in while sliding up (default)
+- `fadeScale` - Fade in while scaling up
+
 ## API Reference
 
 ### Questionnaire Props
 
-| Prop                        | Type                                                                       | Description                                           |
-| --------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `config`                    | `QuestionConfig`                                                           | Configuration object defining all steps and questions |
-| `onCompleted`               | `(formData: Record<string, any>) => Promise<void>`                         | Callback fired when questionnaire is completed        |
-| `onStepChange?`             | `(currentStep: number) => void`                                            | Optional callback fired when step changes             |
-| `initialStep?`              | `number`                                                                   | Starting step index (defaults to 0)                   |
-| `customQuestionComponents?` | `Record<string, React.ComponentType>`                                      | Map of custom components                              |
-| `hideHeader?`               | `boolean`                                                                  | Whether to hide the default header                    |
-| `initialValues?`            | `Record<string, any>`                                                      | Initial form values                                   |
-| `onBeforeNext?`             | `(step: number, data: Record<string, any>) => Promise<boolean>`            | Validation before proceeding                          |
-| `onBeforeBack?`             | `(step: number) => Promise<boolean>`                                       | Validation before going back                          |
-| `renderHeader?`             | `(props: HeaderProps) => React.ReactNode`                                  | Custom header renderer                                |
-| `renderQuestion?`           | `(question: QuestionQuestion, defaultRender: Function) => React.ReactNode` | Custom question renderer                              |
-| `renderFooter?`             | `(props: FooterProps) => React.ReactNode`                                  | Custom footer renderer                                |
+| Prop | Type | Description |
+|------|------|-------------|
+| `config` | `QuestionConfig` | Configuration object defining all steps and questions |
+| `onCompleted` | `(formData: Record<string, unknown>) => Promise<void>` | Callback fired when questionnaire is completed |
+| `onStepChange?` | `(currentStep: number) => void` | Optional callback fired when step changes |
+| `initialStep?` | `number` | Starting step index (defaults to 0) |
+| `initialValues?` | `Record<string, unknown>` | Initial form values |
+| `onBeforeNext?` | `(currentStep: number, formData: Record<string, unknown>) => Promise<boolean>` | Async validation before proceeding |
+| `onBeforeBack?` | `(currentStep: number) => Promise<boolean>` | Async validation before going back |
+| `onExit?` | `() => void` | Callback fired when user attempts to exit |
+| `debug?` | `boolean` | Enable debug logging |
+| `animationPreset?` | `AnimationPresetType` | Animation preset to use for transitions |
+| `renderHeader?` | `(props: HeaderProps) => React.ReactNode` | Custom header renderer |
+| `renderFooter?` | `(props: FooterProps) => React.ReactNode` | Custom footer renderer |
+| `renderQuestion?` | `(question: QuestionQuestion, defaultRender: Function) => React.ReactNode` | Custom question renderer |
 
-### Built-in Components
+### useQuestionnaire Hook
 
-#### Input
+The unified hook that manages the complete questionnaire experience:
 
-Basic text input component with validation support.
-
-```typescript
-{
-  type: 'input',
-  name: 'fieldName',
-  question: 'Label text',
-  placeholder: 'Placeholder text',
-  validation: z.string()
-}
+```tsx
+const {
+  // Current state
+  currentStep,         // Current step index
+  currentStepData,     // Data for the current step
+  formData,            // Current form data
+  isStepValid,         // Whether current step passes validation
+  isForward,           // Direction of navigation (forward/backward)
+  isSubmittingStep,    // Whether the step is being submitted
+  isProcessingField,   // Whether a field is being processed (e.g., file upload)
+  errors,              // Validation errors by field name
+  totalSteps,          // Total number of steps
+  
+  // Animation
+  fadeAnim,            // Animated value for transitions
+  animationPreset,     // Current animation preset
+  
+  // Actions
+  handleNext,          // Go to next step
+  handleBack,          // Go to previous step
+  handleInputChange,   // Update form data
+  validateStep,        // Manually trigger validation
+  setFieldDirty,       // Mark field as touched for validation
+  
+  // Navigation
+  goToStep,            // Jump to specific step
+} = useQuestionnaire(options);
 ```
 
-#### Progress Bar
+#### Hook Options
 
-Shows step completion progress.
+| Option | Type | Description |
+|--------|------|-------------|
+| `config` | `QuestionConfig` | Configuration object defining all steps and questions |
+| `initialStep?` | `number` | Starting step index (defaults to 0) |
+| `initialValues?` | `Record<string, unknown>` | Initial form values |
+| `onCompleted?` | `(formData: Record<string, unknown>) => Promise<void>` | Callback fired when questionnaire is completed |
+| `onStepChange?` | `(currentStep: number) => void` | Optional callback fired when step changes |
+| `onBeforeNext?` | `(currentStep: number, formData: Record<string, unknown>) => Promise<boolean>` | Async validation before proceeding |
+| `onBeforeBack?` | `(currentStep: number) => Promise<boolean>` | Async validation before going back |
+| `onExit?` | `() => void` | Callback fired when user attempts to exit |
+| `debug?` | `boolean` | Enable debug logging |
+| `animationPreset?` | `AnimationPresetType` | Animation preset to use for transitions |
 
-```typescript
+### Components
+
+#### ProgressBar
+
+Animated progress indicator for multi-step forms:
+
+```tsx
 import { ProgressBar } from "react-native-stepform";
 
-<ProgressBar current={currentStep} total={totalSteps} />;
+<ProgressBar 
+  current={currentStep} 
+  total={totalSteps}
+  height={8}                   // Optional: Height in pixels
+  backgroundColor="#f5f5f4"    // Optional: Background color
+  progressColor="#44403c"      // Optional: Progress indicator color
+  animationDuration={300}      // Optional: Animation duration in ms
+/>
 ```
 
-#### ProgressBar Props
+#### ContinueButton
 
-| Prop      | Type     | Description                     |
-| --------- | -------- | ------------------------------- |
-| `current` | `number` | Current step index (zero-based) |
-| `total`   | `number` | Total number of steps           |
+Customizable button for form navigation:
 
-#### Continue Button
+```tsx
+import { ContinueButton } from "react-native-stepform";
 
-Customizable button for form navigation.
-
-```typescript
-import { ProgressBar } from "react-native-stepform";
-
-<ProgressBar current={currentStep} total={totalSteps} />;
+<ContinueButton
+  onPress={handleNext}
+  disabled={!isStepValid}
+  style={{ /* your custom styles */ }}
+>
+  {/* Optional custom content */}
+  <Text>Continue</Text>
+</ContinueButton>
 ```
 
-#### Continue Button Props
+## Creating Custom Question Types
 
-| Prop       | Type              | Description                                                                                    |
-| ---------- | ----------------- | ---------------------------------------------------------------------------------------------- |
-| `onPress`  | `() => void`      | Function called when button is pressed                                                         |
-| `disabled` | `boolean`         | Optional. When true, button is grayed out and not clickable                                    |
-| `children` | `React.ReactNode` | Optional. Custom content to render inside button. If not provided, defaults to "Continue" text |
-| `style`    | `ViewStyle`       | Optional. Custom styles to apply to button container                                           |
+You can extend the library with custom question types by registering them with the component registry:
 
-### Hooks
-
-#### useQuestionnaireValidation
-
-| Parameter     | Type                  | Description                       |
-| ------------- | --------------------- | --------------------------------- |
-| `currentStep` | `QuestionStep`        | Current step configuration object |
-| `formData`    | `Record<string, any>` | Current form data                 |
-
-Returns:
-| Value | Type | Description |
-|------|------|-------------|
-| `isStepValid` | `boolean` | Whether current step passes validation |
-| `validateStep` | `() => boolean` | Manually trigger validation |
-| `errors` | `Record<string, string>` | Field-level error messages |
-| `setFieldDirty` | `(fieldName: string) => void` | Mark field as touched |
-
-#### useQuestionnaireAnimation
-
-Returns:
-| Value | Type | Description |
-|------|------|-------------|
-| `fadeAnim` | `Animated.Value` | Current opacity value |
-| `fadeOut` | `() => void` | Trigger fade out animation |
-| `fadeIn` | `() => void` | Trigger fade in animation |
-
-#### useQuestionnaireNavigation
-
-| Parameter        | Type                     | Description                 |
-| ---------------- | ------------------------ | --------------------------- |
-| `currentStep`    | `number`                 | Current step index          |
-| `fadeOut`        | `() => void`             | Fade out animation function |
-| `fadeIn`         | `() => void`             | Fade in animation function  |
-| `setCurrentStep` | `(step: number) => void` | Step setter function        |
-| `onExit?`        | `() => void`             | Optional exit callback      |
-
-Returns:
-| Value | Type | Description |
-|------|------|-------------|
-| `handleBack` | `() => void` | Handle back navigation with animations |
-
-### Custom Components
-
-#### Creating Custom Questions
-
-Here is an example on how to create custom questions, In this example I'll show a multiple choice question where you can only select one option.
-
-| Prop       | Type                                 | Description                   |
-| ---------- | ------------------------------------ | ----------------------------- |
-| `question` | `QuestionQuestion`                   | Question configuration object |
-| `value`    | `any`                                | Current value of the field    |
-| `onChange` | `(name: string, value: any) => void` | Value change handler          |
-| `error`    | `string \| undefined`                | Current error message if any  |
-
-Note: Any additional props can be added in the type declaration (example below)
-
-I am also not using styles in this example, you should add them yourself
-
-```typescript
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+```tsx
 import { Registry } from "react-native-stepform";
-import type {
-  QuestionComponentProps,
-  BaseQuestion,
-  QuestionTypes,
-} from "react-native-stepform";
+import { View, Text, TouchableOpacity } from "react-native";
 
-// Declare your question type
-declare module "react-native-stepform" {
-  interface QuestionTypes {
-    select: {
-      options: { label: string; value: string }[];
-    };
-  }
-}
-
-// Create select-specific props
-type SelectQuestion = BaseQuestion & {
-  type: "select";
-} & QuestionTypes["select"];
-
-interface SelectProps extends Omit<QuestionComponentProps, "question"> {
-  question: SelectQuestion;
-}
-
-function SelectQuestion({ question, value, onChange }: SelectProps) {
+// Define your custom component
+function SelectQuestion({ question, value, onChange }) {
   return (
     <View>
       <Text>{question.question}</Text>
       {question.options.map((option) => (
         <TouchableOpacity
           key={option.value}
-          onPress={() => onChange(question.name, option.value)}
+          onPress={() => onChange(option.value)}
+          style={{
+            padding: 12,
+            backgroundColor: value === option.value ? "#e0e0e0" : "#f5f5f5",
+            marginVertical: 4,
+            borderRadius: 8,
+          }}
         >
           <Text>{option.label}</Text>
         </TouchableOpacity>
@@ -253,167 +343,123 @@ function SelectQuestion({ question, value, onChange }: SelectProps) {
   );
 }
 
-// Register the component
-Registry.register(
-  "select",
-  SelectQuestion as React.ComponentType<QuestionComponentProps>
-);
+// Register your component
+Registry.register("select", SelectQuestion);
 
-export default SelectQuestion;
-```
+// Update your question types (in a separate types file)
+declare module "react-native-stepform" {
+  interface QuestionTypes {
+    select: {
+      options: Array<{ label: string; value: string }>;
+    };
+  }
+}
 
-Then you can easily use it in yout questionaire config
-
-```typescript
+// Now you can use it in your config
 const config = [
   {
-    pageHeader: "Select an Option",
+    pageHeader: "Preferences",
+    pageSubheader: "Tell us what you like",
     questions: [
       {
-        type: "select",
-        name: "choice",
-        question: "Choose one:",
+        type: "select", // Your custom type
+        name: "favoriteColor",
+        question: "What's your favorite color?",
         options: [
-          { label: "Option 1", value: "1" },
-          { label: "Option 2", value: "2" },
+          { label: "Red", value: "red" },
+          { label: "Blue", value: "blue" },
+          { label: "Green", value: "green" },
         ],
+        validation: z.string(),
       },
     ],
   },
 ];
 ```
 
-### Rendering Custom Questions
+## Custom Rendering
 
-#### renderHeader
+The library provides several render props for complete UI customization:
 
-| Prop           | Type                                      | Description            |
-| -------------- | ----------------------------------------- | ---------------------- |
-| `renderHeader` | `(props: HeaderProps) => React.ReactNode` | Custom header renderer |
+### Custom Header
 
-HeaderProps:
-| Prop | Type | Description |
-|------|------|-------------|
-| `currentStep` | `number` | Current step index (zero-based) |
-| `totalSteps` | `number` | Total number of steps |
-| `onBack` | `() => void` | Back navigation handler |
-
-#### renderFooter
-
-| Prop           | Type                                      | Description            |
-| -------------- | ----------------------------------------- | ---------------------- |
-| `renderFooter` | `(props: FooterProps) => React.ReactNode` | Custom footer renderer |
-
-FooterProps:
-| Prop | Type | Description |
-|------|------|-------------|
-| `onNext` | `() => void` | Handler for next/continue button |
-| `isValid` | `boolean` | Whether current step is valid |
-| `isProcessing` | `boolean` | Whether form is submitting |
-| `isUploading` | `boolean` | Whether files are uploading |
-| `currentStep` | `number` | Current step index |
-| `totalSteps` | `number` | Total number of steps |
-| `onBack` | `() => void` | Handler for back button |
-
-#### renderQuestion
-
-| Prop             | Type                                                                                                              | Description              |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `renderQuestion` | `(question: QuestionQuestion, defaultRender: (question: QuestionQuestion) => React.ReactNode) => React.ReactNode` | Custom question renderer |
-
-### Examples
-
-#### Custom Header & Footer example
-
-Note: I use nativewind in this example but it is agnostic of your styling framework so you can use StyleSheet.
-
-```typescript
-export default function App() {
-  // using the custom select component we made above
-  const config: QuestionConfig = [
-    {
-      pageHeader: "Contact Info",
-      pageSubheader: "How can we reach you?",
-      questions: [
-        {
-          name: "favoriteColor",
-          question: "What is your favorite color?",
-          type: "select",
-          options: [
-            { label: "Red", value: "red" },
-            { label: "Blue", value: "blue" },
-            { label: "Green", value: "green" },
-          ],
-          validation: z.string(),
-        },
-      ],
-    },
-    {
-      pageHeader: "Let's get started",
-      pageSubheader: "Tell us about yourself",
-      questions: [
-        {
-          name: "firstName",
-          question: "What's your first name?",
-          placeholder: "Enter your first name",
-          type: "input",
-          validation: z.string().min(2, "Name must be at least 2 characters"),
-          autoComplete: "email",
-        },
-      ],
-    },
-  ];
-
-  const handleComplete = async (formData: Record<string, any>) => {
-    return;
-  };
-
-  return (
-    <Questionnaire
-      config={config}
-      onCompleted={handleComplete}
-      renderHeader={({ currentStep, totalSteps }) => (
-        <View className="bg-blue-800 p-2">
-          <Text className="text-center text-lg text-white">
-            Step {currentStep + 1} of {totalSteps}
-          </Text>
-        </View>
+```tsx
+<Questionnaire
+  config={config}
+  renderHeader={({ currentStep, totalSteps, onBack }) => (
+    <View style={{ padding: 16, backgroundColor: "#f0f0f0" }}>
+      <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+        Step {currentStep + 1} of {totalSteps}
+      </Text>
+      {currentStep > 0 && (
+        <TouchableOpacity onPress={onBack}>
+          <Text>Back</Text>
+        </TouchableOpacity>
       )}
-      //    Custom question renderer
-      renderQuestion={(question, defaultRender) => (
-        <View className="my-2 rounded-lg bg-gray-50 p-4">
-          {defaultRender(question)}
-          {question.question && (
-            <Text className="mt-2 text-sm text-gray-500">
-              {question.question}
-            </Text>
-          )}
-        </View>
-      )}
-      //    Custom footer renderer
-      renderFooter={({ onNext, onBack, isValid, isProcessing }) => (
-        <View className="flex-row justify-between gap-4 p-4">
-          <TouchableOpacity
-            onPress={onBack}
-            className="flex-1 rounded-full bg-gray-200 p-4"
-          >
-            <Text className="text-center text-gray-800">Back</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onNext}
-            disabled={!isValid || isProcessing}
-            className={`flex-1 rounded-full bg-blue-500 p-4 ${
-              !isValid || isProcessing ? "opacity-50" : ""
-            }`}
-          >
-            <Text className="text-center text-white">
-              {isProcessing ? "Processing..." : "Continue"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    />
-  );
-}
+    </View>
+  )}
+/>
 ```
+
+### Custom Footer
+
+```tsx
+<Questionnaire
+  config={config}
+  renderFooter={({ 
+    onNext, 
+    onBack, 
+    isStepValid, 
+    isSubmittingStep,
+    currentStep, 
+    totalSteps 
+  }) => (
+    <View style={{ flexDirection: "row", padding: 16 }}>
+      {currentStep > 0 && (
+        <TouchableOpacity 
+          onPress={onBack}
+          style={{ padding: 12, backgroundColor: "#f0f0f0", marginRight: 8 }}
+        >
+          <Text>Back</Text>
+        </TouchableOpacity>
+      )}
+      
+      <TouchableOpacity
+        onPress={onNext}
+        disabled={!isStepValid || isSubmittingStep}
+        style={{ 
+          padding: 12, 
+          backgroundColor: isStepValid ? "#007bff" : "#cccccc",
+          flex: 1,
+        }}
+      >
+        <Text style={{ color: "white", textAlign: "center" }}>
+          {isSubmittingStep ? "Processing..." : "Continue"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  )}
+/>
+```
+
+### Custom Question Renderer
+
+```tsx
+<Questionnaire
+  config={config}
+  renderQuestion={(question, defaultRender) => (
+    <View style={{ padding: 16, backgroundColor: "#f9f9f9", marginBottom: 8 }}>
+      {defaultRender(question)}
+      {question.question && (
+        <Text style={{ marginTop: 4, color: "#666" }}>
+          {question.question}
+        </Text>
+      )}
+    </View>
+  )}
+/>
+```
+
+## License
+
+MIT
