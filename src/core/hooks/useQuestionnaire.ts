@@ -72,8 +72,8 @@ function useQuestionnaire({
 	const [formData, setFormData] =
 		useState<Record<string, unknown>>(initialValues);
 	const [isForward, setIsForward] = useState(true);
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [isUploading, setIsUploading] = useState(false);
+	const [isSubmittingStep, setIsSubmittingStep] = useState(false);
+	const [isProcessingField, setIsProcessingField] = useState(false);
 	const [stepHistory, setStepHistory] = useState<
 		Record<number, Record<string, unknown>>
 	>({
@@ -242,13 +242,13 @@ function useQuestionnaire({
 				}
 			} else {
 				// We've reached the end of the questionnaire
-				setIsProcessing(true);
+				setIsSubmittingStep(true);
 				try {
 					await onCompleted?.(formData);
 				} catch (error) {
 					console.error("Error completing questionnaire:", error);
 				} finally {
-					setIsProcessing(false);
+					setIsSubmittingStep(false);
 				}
 			}
 
@@ -286,7 +286,7 @@ function useQuestionnaire({
 			setDirtyFields((prev) => ({ ...prev, [name]: true }));
 
 			// Set uploading state if needed
-			setIsUploading(uploading);
+			setIsProcessingField(uploading);
 		},
 		[currentStep],
 	);
@@ -357,8 +357,8 @@ function useQuestionnaire({
 		formData,
 		isStepValid,
 		isForward,
-		isProcessing,
-		isUploading,
+		isSubmittingStep,
+		isProcessingField,
 		errors,
 		totalSteps: config.length,
 
