@@ -247,23 +247,41 @@ export default function Questionnaire({
 									})
 								) : (
 									<>
-										{currentStep > 0 && (
-											<TouchableOpacity
-												onPress={handleBack}
-												style={styles.backButton}
-												accessibilityRole="button"
-												accessibilityLabel="Go back"
-											>
-												<Text style={styles.backButtonText}>Back</Text>
-											</TouchableOpacity>
-										)}
+										<View style={styles.headerControls}>
+											{currentStep > 0 ? (
+												<TouchableOpacity
+													onPress={handleBack}
+													style={styles.backButton}
+													accessibilityRole="button"
+													accessibilityLabel="Go back"
+												>
+													<Text style={styles.backButtonText}>Back</Text>
+												</TouchableOpacity>
+											) : (
+												<View style={styles.buttonPlaceholder} />
+											)}
 
-										<ProgressBar
-											progress={(currentStep + 1) / totalSteps}
-											height={8}
-											backgroundColor="#f5f5f4"
-											progressColor="#78716c"
-										/>
+											<ProgressBar
+												progress={(currentStep + 1) / totalSteps}
+												height={8}
+												backgroundColor="#f5f5f4"
+												progressColor="#78716c"
+												style={styles.progressBar}
+											/>
+											
+											{hasSkippableQuestions ? (
+												<TouchableOpacity
+													onPress={handleSkip}
+													style={styles.skipButton}
+													accessibilityRole="button"
+													accessibilityLabel="Skip this question"
+												>
+													<Text style={styles.skipButtonText}>Skip</Text>
+												</TouchableOpacity>
+											) : (
+												<View style={styles.buttonPlaceholder} />
+											)}
+										</View>
 									</>
 								)}
 							</View>
@@ -309,16 +327,6 @@ export default function Questionnaire({
 									onPress={handleNext}
 									disabled={!isStepValid() || isProcessingField || isSubmittingStep}
 								/>
-								{hasSkippableQuestions && (
-									<TouchableOpacity
-										onPress={handleSkip}
-										style={styles.skipButton}
-										accessibilityRole="button"
-										accessibilityLabel="Skip this question"
-									>
-										<Text style={styles.skipButtonText}>Skip</Text>
-									</TouchableOpacity>
-								)}
 							</>
 						)}
 					</View>
@@ -347,11 +355,32 @@ const styles = StyleSheet.create({
 	header: {
 		marginBottom: 24,
 	},
+	headerControls: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		width: "100%",
+	},
+	progressBar: {
+		width: "60%",
+	},
+	buttonPlaceholder: {
+		width: 40,
+	},
 	backButton: {
-		marginBottom: 16,
+		width: 40,
+		alignItems: "flex-start",
 	},
 	backButtonText: {
 		fontSize: 16,
+		color: "#78716c",
+	},
+	skipButton: {
+		width: 40,
+		alignItems: "flex-end",
+	},
+	skipButtonText: {
+		fontSize: 14,
 		color: "#78716c",
 	},
 	questionsContainer: {
@@ -359,14 +388,5 @@ const styles = StyleSheet.create({
 	},
 	bottomSection: {
 		marginTop: 24,
-	},
-	skipButton: {
-		alignItems: "center",
-		marginTop: 12,
-		padding: 8,
-	},
-	skipButtonText: {
-		fontSize: 14,
-		color: "#78716c",
 	},
 });

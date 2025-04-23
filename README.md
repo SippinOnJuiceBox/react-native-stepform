@@ -440,11 +440,20 @@ The library provides several render props for complete UI customization:
       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
         Step {currentStep + 1} of {totalSteps}
       </Text>
-      {currentStep > 0 && (
-        <TouchableOpacity onPress={handleBack}>
-          <Text>Back</Text>
-        </TouchableOpacity>
-      )}
+      
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+        {currentStep > 0 && (
+          <TouchableOpacity onPress={handleBack}>
+            <Text>Back</Text>
+          </TouchableOpacity>
+        )}
+        
+        {hasSkippableQuestions && (
+          <TouchableOpacity onPress={handleSkip}>
+            <Text style={{ color: '#666' }}>Skip</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   )}
 />
@@ -458,50 +467,30 @@ The library provides several render props for complete UI customization:
   renderFooter={({ 
     handleNext, 
     handleBack,
-    handleSkip,
     isValid, 
     isSubmittingStep,
     isProcessingField,
     currentStep, 
     totalSteps,
-    hasSkippableQuestions,
     currentStepData,
     formData,
     errors,
     handleInputChange
   }) => (
-    <View style={{ flexDirection: "column", padding: 16 }}>
+    <View style={{ padding: 16 }}>
       <TouchableOpacity
         onPress={handleNext}
         disabled={!isValid || isSubmittingStep}
         style={{ 
           padding: 12, 
           backgroundColor: isValid ? "#007bff" : "#cccccc",
-          marginBottom: 8,
+          borderRadius: 8,
         }}
       >
         <Text style={{ color: "white", textAlign: "center" }}>
           {isSubmittingStep ? "Processing..." : "Continue"}
         </Text>
       </TouchableOpacity>
-      
-      {hasSkippableQuestions && (
-        <TouchableOpacity
-          onPress={handleSkip}
-          style={{ padding: 8, alignItems: "center" }}
-        >
-          <Text style={{ color: "#666" }}>Skip</Text>
-        </TouchableOpacity>
-      )}
-      
-      {currentStep > 0 && (
-        <TouchableOpacity 
-          onPress={handleBack}
-          style={{ padding: 12, alignItems: "center", marginTop: 8 }}
-        >
-          <Text>Back</Text>
-        </TouchableOpacity>
-      )}
     </View>
   )}
 />

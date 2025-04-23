@@ -25,6 +25,9 @@ interface ProgressBarProps {
 
 	/** Duration of the progress animation in milliseconds */
 	animationDuration?: number;
+
+	/** Additional style for the container */
+	style?: object;
 }
 
 const PROGRESS_EASING = Easing.bezier(0.25, 0.1, 0.25, 1);
@@ -38,6 +41,7 @@ function ProgressBar({
 	backgroundColor = "#f5f5f4",
 	progressColor = "#44403c",
 	animationDuration = 300,
+	style,
 }: ProgressBarProps) {
 	// Calculate progress percentage (0-100)
 	const progressPercent = Math.min(Math.max(0, progress), 1) * 100;
@@ -70,6 +74,7 @@ function ProgressBar({
 					height,
 					backgroundColor,
 				},
+				style,
 			]}
 			accessibilityRole="progressbar"
 			accessibilityValue={{
