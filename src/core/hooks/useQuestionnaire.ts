@@ -170,6 +170,11 @@ function useQuestionnaire({
 			return true;
 		}
 
+		// If all questions are skippable, the step is valid
+		if (currentStepData.questions.every((q) => q.skippable)) {
+			return true;
+		}
+
 		// Validate using Zod schema
 		const schema = createValidationSchema();
 
@@ -267,6 +272,55 @@ function useQuestionnaire({
 		debug,
 	]);
 
+	const handleSkip = useCallback(async () => {
+		// Check if we can proceed
+		if (onBeforeNext) {
+			const canProceed = await onBeforeNext(currentStep, formData);
+			if (!canProceed) return;
+		}
+
+		setIsForward(true);
+		fadeOut();
+		await new Promise((resolve) => 
+			setTimeout(resolve, ANIMATION_DURATIONS.fadeOut)
+		);
+
+		if (currentStep < config.length - 1) {
+			const nextStep = currentStep + 1;
+			setCurrentStep(nextStep);
+
+			// For skipped questions, we don't update the form data
+			// but we do need to ensure the step history has an entry
+			if (!stepHistory[nextStep]) {
+				setStepHistory((prev) => ({
+					...prev,
+					[nextStep]: prev[nextStep] || {},
+				}));
+			}
+		} else {
+			// We've reached the end of the questionnaire
+			setIsSubmittingStep(true);
+			try {
+				await onCompleted?.(formData);
+			} catch (error) {
+				console.error("Error completing questionnaire:", error);
+			} finally {
+				setIsSubmittingStep(false);
+			}
+		}
+
+		fadeIn();
+	}, [
+		currentStep,
+		config.length,
+		formData,
+		fadeOut,
+		fadeIn,
+		onCompleted,
+		stepHistory,
+		onBeforeNext,
+	]);
+
 	// Input change handler
 	const handleInputChange = useCallback(
 		(name: string, value: unknown, uploading = false) => {
@@ -350,6 +404,11 @@ function useQuestionnaire({
 		}
 	}, [initialValues, currentStep]);
 
+	// Check if the current step has any skippable questions
+	const hasSkippableQuestions = useMemo(() => {
+		return currentStepData.questions.some((q) => q.skippable);
+	}, [currentStepData.questions]);
+
 	return {
 		// Current state
 		currentStep,
@@ -361,6 +420,7 @@ function useQuestionnaire({
 		isProcessingField,
 		errors,
 		totalSteps: config.length,
+		hasSkippableQuestions,
 
 		// Animation
 		fadeAnim,
@@ -369,6 +429,7 @@ function useQuestionnaire({
 		// Actions
 		handleNext,
 		handleBack,
+		handleSkip,
 		handleInputChange,
 		validateStep,
 		setFieldDirty: (fieldName: string) => {

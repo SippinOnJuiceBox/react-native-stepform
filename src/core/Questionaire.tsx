@@ -18,6 +18,7 @@ import type {
 	QuestionConfig,
 	QuestionQuestion,
 	QuestionComponentProps,
+	QuestionStep,
 } from "./types/question";
 import AnimatedQuestion from "./animations/AnimatedQuestion";
 import type { AnimationPresetType } from "./animations/presets";
@@ -80,13 +81,23 @@ interface QuestionnaireProps {
 	hideHeader?: boolean;
 
 	/**
-	 * Custom header renderer. Receives current step info and back handler.
+	 * Custom header renderer. Receives current step info and navigation handlers.
 	 * Only used if hideHeader is false.
 	 */
 	renderHeader?: (props: {
 		currentStep: number;
 		totalSteps: number;
-		onBack: () => void;
+		handleNext: () => void;
+		handleSkip: () => void;
+		handleBack: () => void;
+		isValid: boolean;
+		isSubmittingStep: boolean;
+		isProcessingField: boolean;
+		hasSkippableQuestions: boolean;
+		currentStepData: QuestionStep;
+		formData: Record<string, unknown>;
+		errors: Record<string, string>;
+		handleInputChange: (name: string, value: unknown) => void;
 	}) => React.ReactNode;
 
 	/**
@@ -103,11 +114,17 @@ interface QuestionnaireProps {
 	renderFooter?: (props: {
 		currentStep: number;
 		totalSteps: number;
-		onNext: () => void;
+		handleNext: () => void;
+		handleSkip: () => void;
 		isValid: boolean;
 		isSubmittingStep: boolean;
 		isProcessingField: boolean;
-		onBack: () => void;
+		handleBack: () => void;
+		hasSkippableQuestions: boolean;
+		currentStepData: QuestionStep;
+		formData: Record<string, unknown>;
+		errors: Record<string, string>;
+		handleInputChange: (name: string, value: unknown) => void;
 	}) => React.ReactNode;
 }
 
@@ -144,9 +161,11 @@ export default function Questionnaire({
 		isStepValid,
 		isSubmittingStep,
 		isProcessingField,
+		hasSkippableQuestions,
 		handleInputChange,
 		handleNext,
 		handleBack,
+		handleSkip,
 	} = useQuestionnaire({
 		config,
 		initialStep,
@@ -214,7 +233,17 @@ export default function Questionnaire({
 									renderHeader({
 										currentStep,
 										totalSteps,
-										onBack: handleBack,
+										handleNext,
+										handleSkip,
+										handleBack,
+										isValid: isStepValid(),
+										isSubmittingStep,
+										isProcessingField,
+										hasSkippableQuestions,
+										currentStepData,
+										formData,
+										errors,
+										handleInputChange,
 									})
 								) : (
 									<>
@@ -239,18 +268,6 @@ export default function Questionnaire({
 								)}
 							</View>
 						)}
-
-						{currentStepData.pageHeader && (
-							<Text style={styles.pageHeader}>
-								{currentStepData.pageHeader}
-							</Text>
-						)}
-
-						{currentStepData.pageSubheader && (
-							<Text style={styles.pageSubheader}>
-								{currentStepData.pageSubheader}
-							</Text>
-						)}
 					</View>
 
 					<AnimatedQuestion
@@ -274,17 +291,35 @@ export default function Questionnaire({
 							renderFooter({
 								currentStep,
 								totalSteps,
-								onNext: handleNext,
+								handleNext,
+								handleSkip,
 								isValid: isStepValid(),
 								isSubmittingStep,
 								isProcessingField,
-								onBack: handleBack,
+								handleBack,
+								hasSkippableQuestions,
+								currentStepData,
+								formData,
+								errors,
+								handleInputChange,
 							})
 						) : (
-							<ContinueButton
-								onPress={handleNext}
-								disabled={!isStepValid() || isProcessingField || isSubmittingStep}
-							/>
+							<>
+								<ContinueButton
+									onPress={handleNext}
+									disabled={!isStepValid() || isProcessingField || isSubmittingStep}
+								/>
+								{hasSkippableQuestions && (
+									<TouchableOpacity
+										onPress={handleSkip}
+										style={styles.skipButton}
+										accessibilityRole="button"
+										accessibilityLabel="Skip this question"
+									>
+										<Text style={styles.skipButtonText}>Skip</Text>
+									</TouchableOpacity>
+								)}
+							</>
 						)}
 					</View>
 				</View>
@@ -319,20 +354,19 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: "#78716c",
 	},
-	pageHeader: {
-		fontSize: 24,
-		fontWeight: "bold",
-		marginBottom: 8,
-		color: "#44403c",
-	},
-	pageSubheader: {
-		fontSize: 16,
-		color: "#78716c",
-	},
 	questionsContainer: {
 		flex: 1,
 	},
 	bottomSection: {
 		marginTop: 24,
+	},
+	skipButton: {
+		alignItems: "center",
+		marginTop: 12,
+		padding: 8,
+	},
+	skipButtonText: {
+		fontSize: 14,
+		color: "#78716c",
 	},
 });

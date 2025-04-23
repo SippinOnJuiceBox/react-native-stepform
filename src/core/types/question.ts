@@ -13,6 +13,8 @@ export interface BaseQuestion {
 	subheading?: string;
 	/** Zod schema for validating the question's answer */
 	validation?: z.ZodType<unknown>;
+	/** Whether this question can be skipped */
+	skippable?: boolean;
 }
 
 /**
@@ -49,10 +51,6 @@ export type QuestionQuestion = BaseQuestion &
  * Each step can contain multiple questions and optional header text.
  */
 export interface QuestionStep {
-	/** Main header text for the step */
-	pageHeader: string;
-	/** Optional subheader text providing additional context */
-	pageSubheader?: string;
 	/** Array of questions to be displayed in this step */
 	questions: QuestionQuestion[];
 }
@@ -63,7 +61,6 @@ export interface QuestionStep {
  * @example
  * ```typescript
  * const config: QuestionConfig = [{
- *   pageHeader: "Personal Info",
  *   questions: [{
  *     type: 'input',
  *     name: 'email',

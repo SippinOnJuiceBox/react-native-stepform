@@ -15,6 +15,8 @@ A lightweight, customizable multi-step form library for React Native with built-
 - **Built-in Validation** - Integrated Zod validation with error handling
 - **Async Operations** - Support for API calls during form progression
 - **Highly Customizable** - Style and render props for complete UI control
+- **Skippable Questions** - Support for optional questions that can be skipped
+- **Separate Enter/Exit Animations** - Customizable animations for entering and exiting questions
 
 ## Installation
 
@@ -40,8 +42,6 @@ export default function App() {
   // Define your form steps and questions
   const config = [
     {
-      pageHeader: "Welcome",
-      pageSubheader: "Let's get started with your profile",
       questions: [
         {
           type: "input",
@@ -53,8 +53,6 @@ export default function App() {
       ],
     },
     {
-      pageHeader: "Contact Information",
-      pageSubheader: "How can we reach you?",
       questions: [
         {
           type: "input",
@@ -63,6 +61,7 @@ export default function App() {
           placeholder: "Enter your email",
           validation: z.string().email("Please enter a valid email"),
           autoComplete: "email",
+          skippable: true, // This question can be skipped
         },
       ],
     },
@@ -79,7 +78,10 @@ export default function App() {
       <Questionnaire
         config={config}
         onCompleted={handleComplete}
-        animationPreset="fadeSlideUp" // Choose your animation style
+        animationPreset="fadeSlideUp" // Default animation for both enter and exit
+        // Or specify different animations for enter and exit
+        enterPreset="fadeSlideUp"
+        exitPreset="fadeSlideDown"
       />
     </SafeAreaProvider>
   );
@@ -107,12 +109,14 @@ export default function CustomForm() {
     formData,
     handleNext,
     handleBack,
+    handleSkip,
     handleInputChange,
     isStepValid,
     isSubmittingStep,
     isProcessingField,
     errors,
     totalSteps,
+    hasSkippableQuestions,
     fadeAnim,
     animationPreset,
   } = useQuestionnaire({
@@ -127,6 +131,8 @@ export default function CustomForm() {
     },
     debug: true, // Enable debug logging
     animationPreset: "fadeSlideUp",
+    enterPreset: "fadeSlideUp",
+    exitPreset: "fadeSlideDown",
   });
 
   return (
@@ -181,6 +187,15 @@ export default function CustomForm() {
             {isSubmittingStep ? "Processing..." : "Continue"}
           </Text>
         </ContinueButton>
+        
+        {hasSkippableQuestions && (
+          <ContinueButton
+            onPress={handleSkip}
+            style={{ marginLeft: 8 }}
+          >
+            <Text>Skip</Text>
+          </ContinueButton>
+        )}
       </View>
     </View>
   );
@@ -195,7 +210,10 @@ The library includes a powerful animation system built on React Native Reanimate
 <Questionnaire
   config={config}
   onCompleted={handleComplete}
-  animationPreset="fadeSlideUp" // Choose your animation style
+  animationPreset="fadeSlideUp" // Default animation for both enter and exit
+  // Or specify different animations for enter and exit
+  enterPreset="fadeSlideUp"
+  exitPreset="fadeSlideDown"
 />
 ```
 
@@ -224,6 +242,8 @@ Available animation presets:
 | `onExit?` | `() => void` | Callback fired when user attempts to exit |
 | `debug?` | `boolean` | Enable debug logging |
 | `animationPreset?` | `AnimationPresetType` | Animation preset to use for transitions |
+| `enterPreset?` | `AnimationPresetType` | Animation preset for entering questions |
+| `exitPreset?` | `AnimationPresetType` | Animation preset for exiting questions |
 | `renderHeader?` | `(props: HeaderProps) => React.ReactNode` | Custom header renderer |
 | `renderFooter?` | `(props: FooterProps) => React.ReactNode` | Custom footer renderer |
 | `renderQuestion?` | `(question: QuestionQuestion, defaultRender: Function) => React.ReactNode` | Custom question renderer |
@@ -239,26 +259,39 @@ const {
   currentStepData,     // Data for the current step
   formData,            // Current form data
   isStepValid,         // Whether current step passes validation
-  isForward,           // Direction of navigation (forward/backward)
-  isSubmittingStep,    // Whether the step is being submitted
-  isProcessingField,   // Whether a field is being processed (e.g., file upload)
-  errors,              // Validation errors by field name
+  isForward,           // Whether navigation direction is forward
+  isSubmittingStep,    // Whether step is submitting
+  isProcessingField,   // Whether a field is processing (e.g. uploading)
+  errors,              // Validation errors
   totalSteps,          // Total number of steps
+  hasSkippableQuestions, // Whether current step has skippable questions
   
   // Animation
-  fadeAnim,            // Animated value for transitions
+  fadeAnim,            // Animation value
   animationPreset,     // Current animation preset
   
   // Actions
   handleNext,          // Go to next step
   handleBack,          // Go to previous step
-  handleInputChange,   // Update form data
-  validateStep,        // Manually trigger validation
-  setFieldDirty,       // Mark field as touched for validation
+  handleSkip,          // Skip the current question
+  handleInputChange,   // Update form values
+  validateStep,        // Validate current step
+  setFieldDirty,       // Mark field as dirty for validation
   
   // Navigation
-  goToStep,            // Jump to specific step
-} = useQuestionnaire(options);
+  goToStep,            // Go to specific step
+} = useQuestionnaire({
+  // Options
+  config,
+  initialStep,
+  initialValues,
+  onCompleted,
+  onStepChange,
+  debug,
+  animationPreset,
+  enterPreset,
+  exitPreset,
+});
 ```
 
 #### Hook Options
@@ -275,6 +308,8 @@ const {
 | `onExit?` | `() => void` | Callback fired when user attempts to exit |
 | `debug?` | `boolean` | Enable debug logging |
 | `animationPreset?` | `AnimationPresetType` | Animation preset to use for transitions |
+| `enterPreset?` | `AnimationPresetType` | Animation preset for entering questions |
+| `exitPreset?` | `AnimationPresetType` | Animation preset for exiting questions |
 
 ### Components
 
@@ -386,13 +421,27 @@ The library provides several render props for complete UI customization:
 ```tsx
 <Questionnaire
   config={config}
-  renderHeader={({ currentStep, totalSteps, onBack }) => (
+  renderHeader={({ 
+    currentStep, 
+    totalSteps, 
+    handleBack,
+    handleNext,
+    handleSkip,
+    isValid,
+    isSubmittingStep,
+    isProcessingField,
+    hasSkippableQuestions,
+    currentStepData,
+    formData,
+    errors,
+    handleInputChange
+  }) => (
     <View style={{ padding: 16, backgroundColor: "#f0f0f0" }}>
       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
         Step {currentStep + 1} of {totalSteps}
       </Text>
       {currentStep > 0 && (
-        <TouchableOpacity onPress={onBack}>
+        <TouchableOpacity onPress={handleBack}>
           <Text>Back</Text>
         </TouchableOpacity>
       )}
@@ -407,36 +456,52 @@ The library provides several render props for complete UI customization:
 <Questionnaire
   config={config}
   renderFooter={({ 
-    onNext, 
-    onBack, 
-    isStepValid, 
+    handleNext, 
+    handleBack,
+    handleSkip,
+    isValid, 
     isSubmittingStep,
+    isProcessingField,
     currentStep, 
-    totalSteps 
+    totalSteps,
+    hasSkippableQuestions,
+    currentStepData,
+    formData,
+    errors,
+    handleInputChange
   }) => (
-    <View style={{ flexDirection: "row", padding: 16 }}>
-      {currentStep > 0 && (
-        <TouchableOpacity 
-          onPress={onBack}
-          style={{ padding: 12, backgroundColor: "#f0f0f0", marginRight: 8 }}
-        >
-          <Text>Back</Text>
-        </TouchableOpacity>
-      )}
-      
+    <View style={{ flexDirection: "column", padding: 16 }}>
       <TouchableOpacity
-        onPress={onNext}
-        disabled={!isStepValid || isSubmittingStep}
+        onPress={handleNext}
+        disabled={!isValid || isSubmittingStep}
         style={{ 
           padding: 12, 
-          backgroundColor: isStepValid ? "#007bff" : "#cccccc",
-          flex: 1,
+          backgroundColor: isValid ? "#007bff" : "#cccccc",
+          marginBottom: 8,
         }}
       >
         <Text style={{ color: "white", textAlign: "center" }}>
           {isSubmittingStep ? "Processing..." : "Continue"}
         </Text>
       </TouchableOpacity>
+      
+      {hasSkippableQuestions && (
+        <TouchableOpacity
+          onPress={handleSkip}
+          style={{ padding: 8, alignItems: "center" }}
+        >
+          <Text style={{ color: "#666" }}>Skip</Text>
+        </TouchableOpacity>
+      )}
+      
+      {currentStep > 0 && (
+        <TouchableOpacity 
+          onPress={handleBack}
+          style={{ padding: 12, alignItems: "center", marginTop: 8 }}
+        >
+          <Text>Back</Text>
+        </TouchableOpacity>
+      )}
     </View>
   )}
 />
