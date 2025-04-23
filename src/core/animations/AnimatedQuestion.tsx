@@ -1,4 +1,4 @@
-import { useEffect, memo } from "react";
+import { useEffect, memo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -23,6 +23,21 @@ interface AnimatedQuestionProps {
    * Animation preset to use
    */
   animationPreset?: AnimationPresetType;
+
+  /**
+   * Optional separate enter animation preset
+   */
+  enterPreset?: AnimationPresetType;
+
+  /**
+   * Optional separate exit animation preset
+   */
+  exitPreset?: AnimationPresetType;
+
+  /**
+   * Current step index for tracking changes
+   */
+  currentStep: number;
 }
 
 /**
@@ -32,27 +47,44 @@ interface AnimatedQuestionProps {
 function AnimatedQuestion({ 
   children, 
   isForward, 
-  animationPreset = DEFAULT_ANIMATION_PRESET 
+  animationPreset = DEFAULT_ANIMATION_PRESET,
+  enterPreset,
+  exitPreset,
+  currentStep
 }: AnimatedQuestionProps) {
-  // Get the selected animation preset
-  const preset = ANIMATION_PRESETS[animationPreset];
+  // Track the previous step to detect changes
+  const [prevStep, setPrevStep] = useState(currentStep);
+  
+  // Get the selected animation presets
+  const mainPreset = ANIMATION_PRESETS[animationPreset];
+  const enterAnimPreset = enterPreset ? ANIMATION_PRESETS[enterPreset] : mainPreset;
+  const exitAnimPreset = exitPreset ? ANIMATION_PRESETS[exitPreset] : mainPreset;
   
   // Initialize animation values
-  const values = preset.initialize(isForward);
+  const values = mainPreset.initialize(isForward);
   
-  // Run animation when direction or children change
+  // Run animation when step changes
   useEffect(() => {
-    // Start the enter animation
-    preset.enter(values);
+    // If the step has changed, trigger animations
+    if (prevStep !== currentStep) {
+      // First run exit animation
+      exitAnimPreset.exit(values);
+      
+      // Then after a delay, update the step and run enter animation
+      const timeout = setTimeout(() => {
+        setPrevStep(currentStep);
+        enterAnimPreset.enter(values);
+      }, 300); // Match this with the exit animation duration
+      
+      return () => clearTimeout(timeout);
+    }
     
-    // Return cleanup function that runs the exit animation
-    return () => {
-      preset.exit(values);
-    };
-  }, [preset, values]);
+    // Initial render or after step update - run enter animation
+    enterAnimPreset.enter(values);
+  }, [currentStep, enterAnimPreset, exitAnimPreset, prevStep, values]);
   
   // Create animated style
-  const animatedStyle = preset.createAnimatedStyle(values);
+  const animatedStyle = mainPreset.createAnimatedStyle(values);
   
   return (
     <View style={styles.container}>

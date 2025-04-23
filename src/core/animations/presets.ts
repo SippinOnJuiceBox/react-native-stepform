@@ -27,15 +27,42 @@ export const ANIMATION_DURATIONS = {
   fadeOut: 300,
 };
 
-// Available animation preset types
-export type AnimationPresetType = 
-  | "fade"
-  | "slideUp"
-  | "slideLeft"
-  | "slideRight"
-  | "scale"
-  | "fadeSlideUp"
-  | "fadeScale";
+/**
+ * Available animation preset types
+ * 
+ * @description These are the available animation presets for transitions between questions
+ * 
+ * - `fade`: Simple fade in/out animation
+ * - `slideUp`: Content slides up (forward) or down (backward)
+ * - `slideLeft`: Content slides left (forward) or right (backward)
+ * - `slideRight`: Content slides right (forward) or left (backward)
+ * - `scale`: Content scales up/down with fade
+ * - `fadeSlideUp`: Content fades while sliding up/down (default)
+ * - `fadeScale`: Content fades while scaling up/down
+ */
+export const AnimationPresets = {
+  /** Simple fade in/out animation */
+  fade: "fade",
+  /** Content slides up (forward) or down (backward) */
+  slideUp: "slideUp",
+  /** Content slides left (forward) or right (backward) */
+  slideLeft: "slideLeft",
+  /** Content slides right (forward) or left (backward) */
+  slideRight: "slideRight",
+  /** Content scales up/down with fade */
+  scale: "scale",
+  /** Content fades while sliding up/down (default) */
+  fadeSlideUp: "fadeSlideUp",
+  /** Content fades while scaling up/down */
+  fadeScale: "fadeScale",
+} as const;
+
+/**
+ * Animation preset type
+ * 
+ * Use with animationPreset, enterPreset, or exitPreset props
+ */
+export type AnimationPresetType = typeof AnimationPresets[keyof typeof AnimationPresets];
 
 /**
  * Animation preset configuration
@@ -346,16 +373,16 @@ const fadeScalePreset: AnimationPreset = {
  * Map of animation presets by type
  */
 export const ANIMATION_PRESETS: Record<AnimationPresetType, AnimationPreset> = {
-  fade: fadePreset,
-  slideUp: slideUpPreset,
-  slideLeft: slideLeftPreset,
-  slideRight: slideRightPreset,
-  scale: scalePreset,
-  fadeSlideUp: fadeSlideUpPreset,
-  fadeScale: fadeScalePreset,
+  [AnimationPresets.fade]: fadePreset,
+  [AnimationPresets.slideUp]: slideUpPreset,
+  [AnimationPresets.slideLeft]: slideLeftPreset,
+  [AnimationPresets.slideRight]: slideRightPreset,
+  [AnimationPresets.scale]: scalePreset,
+  [AnimationPresets.fadeSlideUp]: fadeSlideUpPreset,
+  [AnimationPresets.fadeScale]: fadeScalePreset,
 };
 
 /**
  * Default animation preset
  */
-export const DEFAULT_ANIMATION_PRESET: AnimationPresetType = "fadeSlideUp";
+export const DEFAULT_ANIMATION_PRESET: AnimationPresetType = AnimationPresets.fadeSlideUp;

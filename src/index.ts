@@ -1,11 +1,9 @@
 import {
   Questionnaire,
   Registry,
-  useQuestionnaireAnimation,
-  useQuestionnaireValidation,
-  useQuestionnaireNavigation,
   ContinueButton,
   ProgressBar,
+  useQuestionnaire,
 } from "./core";
 
 import { Input } from "./defaults";
@@ -18,15 +16,15 @@ import type {
   QuestionTypes,
 } from "./core/types/question";
 
+import type { AnimationPresetType } from "./core/animations/presets";
+
 export {
   Questionnaire,
   Registry,
   Input,
   ContinueButton,
   ProgressBar,
-  useQuestionnaireAnimation,
-  useQuestionnaireValidation,
-  useQuestionnaireNavigation,
+  useQuestionnaire,
 };
 
 export type {
@@ -35,4 +33,5 @@ export type {
   QuestionComponentProps,
   BaseQuestion,
   QuestionTypes,
+  AnimationPresetType,
 };
