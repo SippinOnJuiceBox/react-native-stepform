@@ -43,13 +43,10 @@ function ProgressBar({
 	animationDuration = 300,
 	style,
 }: ProgressBarProps) {
-	// Calculate progress percentage (0-100)
 	const progressPercent = Math.min(Math.max(0, progress), 1) * 100;
 
-	// Shared value for animation
 	const widthPercent = useSharedValue(0);
 
-	// Update animation when progress changes
 	useEffect(() => {
 		widthPercent.value = withTiming(progressPercent, {
 			duration: animationDuration,
@@ -57,7 +54,6 @@ function ProgressBar({
 		});
 	}, [progressPercent, animationDuration, widthPercent]);
 
-	// Animated style for progress bar width
 	const animatedStyle = useAnimatedStyle(() => {
 		return {
 			width: `${widthPercent.value}%`,

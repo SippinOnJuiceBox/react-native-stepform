@@ -5,7 +5,6 @@ import useQuestionnaire from "./hooks/useQuestionnaire";
 import { Registry } from "./types/QuestionComponents";
 import { Input } from "../defaults";
 
-// Register default input component
 Registry.register("input", Input);
 
 export {

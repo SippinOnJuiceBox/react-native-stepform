@@ -17,14 +17,14 @@ const SPRING_CONFIG = {
 
 // Timing configuration for smoother animations
 const TIMING_CONFIG = {
-  duration: 300,
+  duration: 200,
   easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 };
 
 // Animation durations
 export const ANIMATION_DURATIONS = {
-  fadeIn: 200,
-  fadeOut: 300,
+  fadeIn: 150,
+  fadeOut: 200,
 };
 
 /**

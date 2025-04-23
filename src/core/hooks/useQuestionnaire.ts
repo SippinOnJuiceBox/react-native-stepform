@@ -4,7 +4,10 @@ import { z } from "zod";
 
 import type { QuestionConfig } from "../types/question";
 import type { AnimationPresetType } from "../animations/presets";
-import { DEFAULT_ANIMATION_PRESET, ANIMATION_DURATIONS } from "../animations/presets";
+import {
+	DEFAULT_ANIMATION_PRESET,
+	ANIMATION_DURATIONS,
+} from "../animations/presets";
 
 interface UseQuestionnaireOptions {
 	/** Configuration object defining all steps and questions in the questionnaire */
@@ -44,7 +47,7 @@ interface UseQuestionnaireOptions {
 
 	/** Enable debug logging of form data on continue */
 	debug?: boolean;
-	
+
 	/** Animation preset to use for transitions */
 	animationPreset?: AnimationPresetType;
 }
@@ -67,7 +70,6 @@ function useQuestionnaire({
 	debug = false,
 	animationPreset = DEFAULT_ANIMATION_PRESET,
 }: UseQuestionnaireOptions) {
-	// State management
 	const [currentStep, setCurrentStep] = useState(initialStep);
 	const [formData, setFormData] =
 		useState<Record<string, unknown>>(initialValues);
@@ -82,16 +84,13 @@ function useQuestionnaire({
 	const [dirtyFields, setDirtyFields] = useState<Record<string, boolean>>({});
 	const [errors, setErrors] = useState<Record<string, string>>({});
 
-	// Animation state
 	const [fadeAnim] = useState(new Animated.Value(1));
 
-	// Current step data
 	const currentStepData = useMemo(
 		() => config[currentStep],
 		[config, currentStep],
 	);
 
-	// Animation functions
 	const fadeOut = useCallback(() => {
 		Animated.timing(fadeAnim, {
 			toValue: 0,
@@ -108,7 +107,6 @@ function useQuestionnaire({
 		}).start();
 	}, [fadeAnim]);
 
-	// Validation functions
 	const createValidationSchema = useCallback(() => {
 		return z.object(
 			currentStepData.questions.reduce(
@@ -124,13 +122,11 @@ function useQuestionnaire({
 	}, [currentStepData]);
 
 	const validateStep = useCallback(() => {
-		// If there are no questions with validation, the step is valid
 		if (currentStepData.questions.every((q) => !q.validation)) {
 			setErrors({});
 			return true;
 		}
 
-		// Mark all fields as dirty for validation
 		const allFieldsDirty = currentStepData.questions.reduce(
 			(acc, question) => {
 				acc[question.name] = true;
@@ -140,7 +136,6 @@ function useQuestionnaire({
 		);
 		setDirtyFields(allFieldsDirty);
 
-		// Validate using Zod schema
 		const schema = createValidationSchema();
 
 		try {
@@ -163,19 +158,15 @@ function useQuestionnaire({
 		}
 	}, [createValidationSchema, currentStepData.questions, formData]);
 
-	// Check if the current step is valid
 	const isStepValid = useCallback(() => {
-		// If there are no questions with validation, the step is valid
 		if (currentStepData.questions.every((q) => !q.validation)) {
 			return true;
 		}
 
-		// If all questions are skippable, the step is valid
 		if (currentStepData.questions.every((q) => q.skippable)) {
 			return true;
 		}
 
-		// Validate using Zod schema
 		const schema = createValidationSchema();
 
 		try {
@@ -186,10 +177,8 @@ function useQuestionnaire({
 		}
 	}, [createValidationSchema, currentStepData.questions, formData]);
 
-	// Navigation functions
 	const handleBack = useCallback(async () => {
 		if (currentStep > 0) {
-			// Check if we can go back
 			if (onBeforeBack) {
 				const canGoBack = await onBeforeBack(currentStep);
 				if (!canGoBack) return;
@@ -204,7 +193,6 @@ function useQuestionnaire({
 			const previousStep = currentStep - 1;
 			setCurrentStep(previousStep);
 
-			// Restore previous step data if available
 			if (stepHistory[previousStep]) {
 				setFormData(stepHistory[previousStep]);
 			}
@@ -217,7 +205,6 @@ function useQuestionnaire({
 
 	const handleNext = useCallback(async () => {
 		if (validateStep()) {
-			// Debug logging if enabled
 			if (debug) {
 				console.log({
 					step: currentStep,
@@ -225,7 +212,6 @@ function useQuestionnaire({
 				});
 			}
 
-			// Check if we can proceed
 			if (onBeforeNext) {
 				const canProceed = await onBeforeNext(currentStep, formData);
 				if (!canProceed) return;
@@ -233,20 +219,18 @@ function useQuestionnaire({
 
 			setIsForward(true);
 			fadeOut();
-			await new Promise((resolve) => 
-				setTimeout(resolve, ANIMATION_DURATIONS.fadeOut)
+			await new Promise((resolve) =>
+				setTimeout(resolve, ANIMATION_DURATIONS.fadeOut),
 			);
 
 			if (currentStep < config.length - 1) {
 				const nextStep = currentStep + 1;
 				setCurrentStep(nextStep);
 
-				// Restore next step data if available
 				if (stepHistory[nextStep]) {
 					setFormData(stepHistory[nextStep]);
 				}
 			} else {
-				// We've reached the end of the questionnaire
 				setIsSubmittingStep(true);
 				try {
 					await onCompleted?.(formData);
@@ -273,7 +257,6 @@ function useQuestionnaire({
 	]);
 
 	const handleSkip = useCallback(async () => {
-		// Check if we can proceed
 		if (onBeforeNext) {
 			const canProceed = await onBeforeNext(currentStep, formData);
 			if (!canProceed) return;
@@ -281,16 +264,14 @@ function useQuestionnaire({
 
 		setIsForward(true);
 		fadeOut();
-		await new Promise((resolve) => 
-			setTimeout(resolve, ANIMATION_DURATIONS.fadeOut)
+		await new Promise((resolve) =>
+			setTimeout(resolve, ANIMATION_DURATIONS.fadeOut),
 		);
 
 		if (currentStep < config.length - 1) {
 			const nextStep = currentStep + 1;
 			setCurrentStep(nextStep);
 
-			// For skipped questions, we don't update the form data
-			// but we do need to ensure the step history has an entry
 			if (!stepHistory[nextStep]) {
 				setStepHistory((prev) => ({
 					...prev,
@@ -298,7 +279,6 @@ function useQuestionnaire({
 				}));
 			}
 		} else {
-			// We've reached the end of the questionnaire
 			setIsSubmittingStep(true);
 			try {
 				await onCompleted?.(formData);
@@ -321,13 +301,11 @@ function useQuestionnaire({
 		onBeforeNext,
 	]);
 
-	// Input change handler
 	const handleInputChange = useCallback(
 		(name: string, value: unknown, uploading = false) => {
 			setFormData((prev) => {
 				const newFormData = { ...prev, [name]: value };
 
-				// Update step history
 				setStepHistory((prevHistory) => ({
 					...prevHistory,
 					[currentStep]: newFormData,
@@ -336,25 +314,19 @@ function useQuestionnaire({
 				return newFormData;
 			});
 
-			// Mark field as dirty for validation
 			setDirtyFields((prev) => ({ ...prev, [name]: true }));
 
-			// Set uploading state if needed
 			setIsProcessingField(uploading);
 		},
 		[currentStep],
 	);
 
-	// Reset dirty fields when mounted
 	useEffect(() => {
 		setDirtyFields({});
 	}, []);
 
-	// Validate dirty fields when form data changes
 	useEffect(() => {
 		if (Object.keys(dirtyFields).length === 0) return;
-
-		// If there are no questions with validation, the step is valid
 		if (currentStepData.questions.every((q) => !q.validation)) {
 			setErrors({});
 			return;
@@ -370,7 +342,6 @@ function useQuestionnaire({
 				const newErrors = error.errors.reduce(
 					(acc, curr) => {
 						const field = curr.path[0] as string;
-						// Only show errors for dirty fields
 						if (dirtyFields[field]) {
 							acc[field] = curr.message;
 						}
@@ -388,12 +359,10 @@ function useQuestionnaire({
 		dirtyFields,
 	]);
 
-	// Call onStepChange when current step changes
 	useEffect(() => {
 		onStepChange?.(currentStep);
 	}, [currentStep, onStepChange]);
 
-	// Initialize with initial values
 	useEffect(() => {
 		if (Object.keys(initialValues).length > 0) {
 			setFormData((prev) => ({ ...prev, ...initialValues }));
@@ -404,13 +373,11 @@ function useQuestionnaire({
 		}
 	}, [initialValues, currentStep]);
 
-	// Check if the current step has any skippable questions
 	const hasSkippableQuestions = useMemo(() => {
 		return currentStepData.questions.some((q) => q.skippable);
 	}, [currentStepData.questions]);
 
 	return {
-		// Current state
 		currentStep,
 		currentStepData,
 		formData,
@@ -421,12 +388,8 @@ function useQuestionnaire({
 		errors,
 		totalSteps: config.length,
 		hasSkippableQuestions,
-
-		// Animation
 		fadeAnim,
 		animationPreset,
-
-		// Actions
 		handleNext,
 		handleBack,
 		handleSkip,
@@ -435,8 +398,6 @@ function useQuestionnaire({
 		setFieldDirty: (fieldName: string) => {
 			setDirtyFields((prev) => ({ ...prev, [fieldName]: true }));
 		},
-
-		// Navigation
 		goToStep: (step: number) => {
 			if (step >= 0 && step < config.length) {
 				setCurrentStep(step);
