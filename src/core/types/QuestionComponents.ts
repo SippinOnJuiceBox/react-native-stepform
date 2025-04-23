@@ -1,10 +1,11 @@
-import { ComponentType } from "react";
-import { QuestionComponentProps } from "./question";
+import type { ComponentType } from "react";
+import type { QuestionComponentProps } from "./question";
 
 // Use React Native's global scope for persistent component registration
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const globalScope = global as any;
 if (!globalScope.__QuestionRegistry) {
-  globalScope.__QuestionRegistry = {};
+	globalScope.__QuestionRegistry = {};
 }
 
 const components = globalScope.__QuestionRegistry;
@@ -52,31 +53,31 @@ const components = globalScope.__QuestionRegistry;
  * ```
  */
 export interface ComponentRegistry {
-  /**
-   * Register a new question component globally. Once registered, the component
-   * can be used in any questionnaire config by referencing its type.
-   *
-   * @param type - Unique identifier for the question type (e.g., 'select', 'chips')
-   * @param component - React component that implements QuestionComponentProps
-   */
-  register: (
-    type: string,
-    component: ComponentType<QuestionComponentProps>
-  ) => void;
+	/**
+	 * Register a new question component globally. Once registered, the component
+	 * can be used in any questionnaire config by referencing its type.
+	 *
+	 * @param type - Unique identifier for the question type (e.g., 'select', 'chips')
+	 * @param component - React component that implements QuestionComponentProps
+	 */
+	register: (
+		type: string,
+		component: ComponentType<QuestionComponentProps>,
+	) => void;
 
-  /**
-   * Retrieve a registered component by its type
-   * @param type - The question type to retrieve
-   * @returns The registered React component for the question type
-   * @throws Error if the requested question type is not registered
-   */
-  get: (type: string) => ComponentType<QuestionComponentProps>;
+	/**
+	 * Retrieve a registered component by its type
+	 * @param type - The question type to retrieve
+	 * @returns The registered React component for the question type
+	 * @throws Error if the requested question type is not registered
+	 */
+	get: (type: string) => ComponentType<QuestionComponentProps>;
 
-  /**
-   * Get all registered components
-   * @returns Object mapping question types to their components
-   */
-  getAll: () => Record<string, ComponentType<QuestionComponentProps>>;
+	/**
+	 * Get all registered components
+	 * @returns Object mapping question types to their components
+	 */
+	getAll: () => Record<string, ComponentType<QuestionComponentProps>>;
 }
 
 /**
@@ -85,22 +86,22 @@ export interface ComponentRegistry {
  * without requiring additional imports or setup.
  */
 export const Registry: ComponentRegistry = {
-  register: (
-    type: string,
-    component: ComponentType<QuestionComponentProps>
-  ) => {
-    components[type] = component;
-  },
+	register: (
+		type: string,
+		component: ComponentType<QuestionComponentProps>,
+	) => {
+		components[type] = component;
+	},
 
-  get: (type: string) => {
-    const component = components[type];
-    if (!component) {
-      throw new Error(`Question type ${type} is not supported`);
-    }
-    return component;
-  },
+	get: (type: string) => {
+		const component = components[type];
+		if (!component) {
+			throw new Error(`Question type ${type} is not supported`);
+		}
+		return component;
+	},
 
-  getAll: () => components,
+	getAll: () => components,
 };
 
 /**

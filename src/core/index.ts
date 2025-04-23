@@ -1,8 +1,7 @@
 import { default as Questionnaire } from "./Questionaire";
-import { ContinueButton, ProgressBar } from "./components";
-import { useQuestionnaireAnimation } from "./hooks/useQuestionaireAnimation";
-import { useQuestionnaireValidation } from "./hooks/useQuestionaireValidation";
-import { useQuestionnaireNavigation } from "./hooks/useQuestionaireNavigation";
+import { ContinueButton } from "./components";
+import ProgressBar from "./components/ProgressBar";
+import useQuestionnaire from "./hooks/useQuestionnaire";
 import { Registry } from "./types/QuestionComponents";
 import { Input } from "../defaults";
 
@@ -10,13 +9,11 @@ import { Input } from "../defaults";
 Registry.register("input", Input);
 
 export {
-  Questionnaire,
-  Registry,
-  ContinueButton,
-  ProgressBar,
-  useQuestionnaireAnimation,
-  useQuestionnaireValidation,
-  useQuestionnaireNavigation,
+	Questionnaire,
+	Registry,
+	ContinueButton,
+	ProgressBar,
+	useQuestionnaire,
 };
 
 export * from "./types/question";

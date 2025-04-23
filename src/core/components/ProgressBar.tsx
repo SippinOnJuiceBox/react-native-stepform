@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { memo, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,60 +9,91 @@ import Animated, {
 
 /**
  * Props for the ProgressBar component
- * @typedef {Object} ProgressBarProps
- * @property {number} current - The current progress value
- * @property {number} total - The total value representing 100% progress
  */
-type ProgressBarProps = {
+interface ProgressBarProps {
+  /** Current progress value between 0 and total */
   current: number;
+  
+  /** Maximum value representing 100% progress */
   total: number;
-};
+  
+  /** Height of the progress bar in pixels */
+  height?: number;
+  
+  /** Background color of the progress bar container */
+  backgroundColor?: string;
+  
+  /** Color of the progress indicator */
+  progressColor?: string;
+  
+  /** Duration of the progress animation in milliseconds */
+  animationDuration?: number;
+}
+
+const PROGRESS_EASING = Easing.bezier(0.25, 0.1, 0.25, 1);
 
 /**
- * A animated progress bar component that shows completion progress
- * @component
- * @param {ProgressBarProps} props - The component props
- * @param {number} props.current - Current progress value between 0 and total
- * @param {number} props.total - Maximum value representing 100% progress
- *
+ * An animated progress bar component that shows completion progress
  */
-export function ProgressBar({ current, total }: ProgressBarProps) {
-  const progress = useSharedValue(0);
+function ProgressBar({
+  current,
+  total,
+  height = 8,
+  backgroundColor = "#f5f5f4",
+  progressColor = "#44403c",
+  animationDuration = 300,
+}: ProgressBarProps) {
+  // Calculate progress percentage (0-100)
+  const progress = 
+    total <= 0 ? 0 : Math.min(Math.max(0, current / total), 1) * 100;
+  
+  // Shared value for animation
+  const widthPercent = useSharedValue(0);
 
+  // Update animation when progress changes
   useEffect(() => {
-    // Calculate target progress percentage
-    const targetProgress = (current / total) * 100;
-
-    // Animate to new progress value
-    progress.value = withTiming(targetProgress, {
-      duration: 150, // Animation duration in ms
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    widthPercent.value = withTiming(progress, {
+      duration: animationDuration,
+      easing: PROGRESS_EASING,
     });
-  }, [current, total]);
+  }, [progress, animationDuration, widthPercent]);
 
   // Animated style for progress bar width
-  const animatedStyle = useAnimatedStyle(() => ({
-    width: `${progress.value}%`,
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${widthPercent.value}%`,
+      height: "100%",
+      backgroundColor: progressColor,
+    };
+  });
 
   return (
-    <View style={[styles.container]}>
-      <Animated.View style={[styles.progressBar, animatedStyle]} />
+    <View
+      style={[
+        styles.container,
+        {
+          height,
+          backgroundColor,
+        },
+      ]}
+      accessibilityRole="progressbar"
+      accessibilityValue={{
+        min: 0,
+        max: 100,
+        now: progress,
+      }}
+    >
+      <Animated.View style={animatedStyle} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 8,
-    width: "92%",
+    width: "100%",
     overflow: "hidden",
-    borderRadius: 9999,
-    backgroundColor: "#f5f5f4",
-  },
-  progressBar: {
-    height: "100%",
-    borderRadius: 9999,
-    backgroundColor: "#44403c",
+    borderRadius: 4,
   },
 });
+
+export default memo(ProgressBar);

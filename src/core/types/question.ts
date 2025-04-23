@@ -1,24 +1,18 @@
-import { ReactNode } from "react";
-import { z } from "zod";
-
-/**
- * Type alias for React nodes that can be used as icons
- */
-export type IconType = ReactNode;
+import type { z } from "zod";
 
 /**
  * Base interface that defines the common properties all question types must implement.
  * This ensures consistency across different question types in the Question flow.
  */
 export interface BaseQuestion {
-  /** Unique identifier for the question field */
-  name: string;
-  /** The question text displayed to the user */
-  question: string;
-  /** Optional additional text displayed below the question */
-  subheading?: string;
-  /** Zod schema for validating the question's answer */
-  validation?: z.ZodType<any>;
+	/** Unique identifier for the question field */
+	name: string;
+	/** The question text displayed to the user */
+	question: string;
+	/** Optional additional text displayed below the question */
+	subheading?: string;
+	/** Zod schema for validating the question's answer */
+	validation?: z.ZodType<unknown>;
 }
 
 /**
@@ -34,7 +28,10 @@ export interface BaseQuestion {
  *   }
  * }
  * ```
+ *
  */
+
+// biome-ignore lint/suspicious/noEmptyInterface: <explanation>
 export interface QuestionTypes {}
 
 /**
@@ -43,21 +40,21 @@ export interface QuestionTypes {}
  * when new question types are added to QuestionTypes.
  */
 export type QuestionQuestion = BaseQuestion &
-  {
-    [K in keyof QuestionTypes]: { type: K } & QuestionTypes[K];
-  }[keyof QuestionTypes];
+	{
+		[K in keyof QuestionTypes]: { type: K } & QuestionTypes[K];
+	}[keyof QuestionTypes];
 
 /**
  * Defines the structure of a single step in the Question process.
  * Each step can contain multiple questions and optional header text.
  */
 export interface QuestionStep {
-  /** Main header text for the step */
-  pageHeader: string;
-  /** Optional subheader text providing additional context */
-  pageSubheader?: string;
-  /** Array of questions to be displayed in this step */
-  questions: QuestionQuestion[];
+	/** Main header text for the step */
+	pageHeader: string;
+	/** Optional subheader text providing additional context */
+	pageSubheader?: string;
+	/** Array of questions to be displayed in this step */
+	questions: QuestionQuestion[];
 }
 
 /**
@@ -83,15 +80,15 @@ export type QuestionConfig = QuestionStep[];
  * Provides consistent prop types across different question components.
  */
 export interface QuestionComponentProps {
-  /** The question configuration object */
-  question: QuestionQuestion;
-  /** Current value of the question field */
-  value: any;
-  /**
-   * Callback function to update the question's value
-   * @param name - The name of the question field
-   * @param value - The new value for the field
-   */
-  onChange: (name: string, value: any) => void;
-  error?: string;
+	/** The question configuration object */
+	question: QuestionQuestion;
+	/** Current value of the question field */
+	value: unknown;
+	/**
+	 * Callback function to update the question's value
+	 * @param name - The name of the question field
+	 * @param value - The new value for the field
+	 */
+	onChange: (name: string, value: unknown) => void;
+	error?: string;
 }
