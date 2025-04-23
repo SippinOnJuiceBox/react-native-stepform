@@ -90,6 +90,7 @@ interface QuestionnaireProps {
 		handleNext: () => void;
 		handleSkip: () => void;
 		handleBack: () => void;
+		handleExit: () => void;
 		isValid: boolean;
 		isSubmittingStep: boolean;
 		isProcessingField: boolean;
@@ -120,6 +121,7 @@ interface QuestionnaireProps {
 		isSubmittingStep: boolean;
 		isProcessingField: boolean;
 		handleBack: () => void;
+		handleExit: () => void;
 		hasSkippableQuestions: boolean;
 		currentStepData: QuestionStep;
 		formData: Record<string, unknown>;
@@ -166,6 +168,7 @@ export default function Questionnaire({
 		handleNext,
 		handleBack,
 		handleSkip,
+		handleExit,
 	} = useQuestionnaire({
 		config,
 		initialStep,
@@ -236,6 +239,7 @@ export default function Questionnaire({
 										handleNext,
 										handleSkip,
 										handleBack,
+										handleExit,
 										isValid: isStepValid(),
 										isSubmittingStep,
 										isProcessingField,
@@ -248,18 +252,14 @@ export default function Questionnaire({
 								) : (
 									<>
 										<View style={styles.headerControls}>
-											{currentStep > 0 ? (
-												<TouchableOpacity
-													onPress={handleBack}
-													style={styles.backButton}
-													accessibilityRole="button"
-													accessibilityLabel="Go back"
-												>
-													<Text style={styles.backButtonText}>Back</Text>
-												</TouchableOpacity>
-											) : (
-												<View style={styles.buttonPlaceholder} />
-											)}
+											<TouchableOpacity
+												onPress={handleBack}
+												style={styles.backButton}
+												accessibilityRole="button"
+												accessibilityLabel={currentStep > 0 ? "Go back" : "Exit"}
+											>
+												<Text style={styles.backButtonText}>Back</Text>
+											</TouchableOpacity>
 
 											<ProgressBar
 												progress={(currentStep + 1) / totalSteps}
@@ -315,6 +315,7 @@ export default function Questionnaire({
 								isSubmittingStep,
 								isProcessingField,
 								handleBack,
+								handleExit,
 								hasSkippableQuestions,
 								currentStepData,
 								formData,

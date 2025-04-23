@@ -1,4 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+	useCallback,
+	useMemo,
+	useState,
+} from "react";
 import { Animated } from "react-native";
 import { z } from "zod";
 
@@ -177,6 +181,10 @@ function useQuestionnaire({
 		}
 	}, [createValidationSchema, currentStepData.questions, formData]);
 
+	const handleExit = useCallback(() => {
+		onExit?.();
+	}, [onExit]);
+
 	const handleBack = useCallback(async () => {
 		if (currentStep > 0) {
 			if (onBeforeBack) {
@@ -199,9 +207,9 @@ function useQuestionnaire({
 
 			fadeIn();
 		} else {
-			onExit?.();
+			handleExit();
 		}
-	}, [currentStep, fadeOut, fadeIn, stepHistory, onBeforeBack, onExit]);
+	}, [currentStep, fadeOut, fadeIn, stepHistory, onBeforeBack, handleExit]);
 
 	const handleNext = useCallback(async () => {
 		if (validateStep()) {
@@ -321,58 +329,6 @@ function useQuestionnaire({
 		[currentStep],
 	);
 
-	useEffect(() => {
-		setDirtyFields({});
-	}, []);
-
-	useEffect(() => {
-		if (Object.keys(dirtyFields).length === 0) return;
-		if (currentStepData.questions.every((q) => !q.validation)) {
-			setErrors({});
-			return;
-		}
-
-		const schema = createValidationSchema();
-
-		try {
-			schema.parse(formData);
-			setErrors({});
-		} catch (error) {
-			if (error instanceof z.ZodError) {
-				const newErrors = error.errors.reduce(
-					(acc, curr) => {
-						const field = curr.path[0] as string;
-						if (dirtyFields[field]) {
-							acc[field] = curr.message;
-						}
-						return acc;
-					},
-					{} as Record<string, string>,
-				);
-				setErrors(newErrors);
-			}
-		}
-	}, [
-		formData,
-		createValidationSchema,
-		currentStepData.questions,
-		dirtyFields,
-	]);
-
-	useEffect(() => {
-		onStepChange?.(currentStep);
-	}, [currentStep, onStepChange]);
-
-	useEffect(() => {
-		if (Object.keys(initialValues).length > 0) {
-			setFormData((prev) => ({ ...prev, ...initialValues }));
-			setStepHistory((prev) => ({
-				...prev,
-				[currentStep]: { ...prev[currentStep], ...initialValues },
-			}));
-		}
-	}, [initialValues, currentStep]);
-
 	const hasSkippableQuestions = useMemo(() => {
 		return currentStepData.questions.some((q) => q.skippable);
 	}, [currentStepData.questions]);
@@ -393,6 +349,7 @@ function useQuestionnaire({
 		handleNext,
 		handleBack,
 		handleSkip,
+		handleExit,
 		handleInputChange,
 		validateStep,
 		setFieldDirty: (fieldName: string) => {
